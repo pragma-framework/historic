@@ -21,4 +21,4 @@ And in scripts blocks:
 
 ## What about created_at and created_by
 
-These columns should be handled by a business hook in the save process
+These columns should be handled by within the PRAGMA_HISTORIC_CREATION_HOOK constant (in the config.php)
