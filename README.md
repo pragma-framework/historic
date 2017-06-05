@@ -19,4 +19,6 @@ And in scripts blocks:
 		]
 	}
 
+## What about created_at and created_by
 
+These columns should be handled by a business hook in the save process
