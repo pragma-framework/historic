@@ -1,5 +1,4 @@
 <?php
-
 use Phinx\Migration\AbstractMigration;
 
 class AddHistoricActionsTable extends AbstractMigration
@@ -26,7 +25,7 @@ class AddHistoricActionsTable extends AbstractMigration
 		 * with the Table class.
 		 */
 		public function change(){
-			if(defined(ORM_ID_AS_UID) && ORM_ID_AS_UID){
+			if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
 				$strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
 				$t = $this->table('historic_actions', ['id' => false, 'primary_key' => 'id']);
 				switch($strategy){
