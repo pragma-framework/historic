@@ -43,6 +43,7 @@ class AddHistoricChangesTable extends AbstractMigration
 		}
 		else{
 			$t = $this->table('historic_changes');
+			$t->addColumn('action_id', 'integer');
 		}
 
 		$t->addColumn('field', 'string')

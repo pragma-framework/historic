@@ -26,7 +26,7 @@ trait Historisable{
 			}
 
 			if( !empty($changes) ){
-				Action::build([
+				$action = Action::build([
 					'historisable_type' => get_class($this),
 					'historisable_id' 	=> $this->id,
 					'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
