@@ -8,5 +8,9 @@ class Action extends Model{
 
 	public function __construct(){
 		parent::__construct(self::TABLE_NAME);
+
+		if(defined('PRAGMA_HISTORIC_CREATION_HOOK')){
+			$this->pushHook('before_save', PRAGMA_HISTORIC_CREATION_HOOK);
+		}
 	}
 }
