@@ -3,7 +3,7 @@ namespace Pragma\Historic;
 
 use Pragma\ORM\Model;
 
-class HistoricChange extends Model{
+class Change extends Model{
 	const TABLE_NAME = 'historic_changes';
 
 	public function __construct(){

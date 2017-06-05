@@ -2,15 +2,14 @@
 namespace Pragma\Historic;
 
 trait Historisable{
-	protected $is_historised = false; //indique si l'objet doit être historisé ou non
-	protected $initial_values = null;//stocke son tableau de valeur initiale
-	protected $histo_excluded = null;//tableau de colonnes ignorées dans la détection de changements
+	protected $is_historised = false; //tell if the object must be hisorized
+	protected $histo_excluded = null;//ignored columns during the historise process
 	protected $wasnew = false;
-	protected $global_name = "";//en cas de suppression permet d'indiquer quelle colonne utiliser pour alimenter le deleted_name de l'historic
+	protected $global_name = "";//when it's a delete, it store the name of the object deleted
 	protected $histo_ref = null;
 
 	protected function historise($last = false){
-		//on n'enregistre que les updates pour l'instant, pas les create
+		//we juste save the updates, not the creations
 		if($this->is_historised() && ! $this->wasnew){
 			$changes = [];
 			foreach($this->fields as $k => $value){
@@ -27,7 +26,7 @@ trait Historisable{
 			}
 
 			if( !empty($changes) ){
-				$action = HistoricAction::build([
+				Action::build([
 					'historisable_type' => get_class($this),
 					'historisable_id' 	=> $this->id,
 					'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
@@ -36,7 +35,7 @@ trait Historisable{
 					])->save();
 
 				foreach($changes as $k => $values){
-					HistoricChange::build([
+					Change::build([
 						'action_id'				=> $action->id,
 						'field'						=> $k,
 						'before'					=> $values['before'],
@@ -69,7 +68,7 @@ trait Historisable{
 		return $this->global_name;
 	}
 
-	public function set_histo_ref(\Pragma\ORM\Model $ref){
+	public function set_histo_ref($ref){
 		$this->histo_ref = $ref;
 	}
 
@@ -80,14 +79,14 @@ trait Historisable{
 		}
 	}
 
-	/* on peut passer les colonnes à ignorer directement dans les params */
+	/* ignored fields are passed as arguments */
 	public function ignore_fields(){
 		$this->histo_excluded = array_flip(func_get_args());
 	}
 
 	public function deleted_entry(){
 		if($this->is_historised()){
-			$action = HistoricAction::build([
+			$action = Action::build([
 						'historisable_type' 		=> get_class($this),
 						'historisable_id' 			=> $this->id,
 						'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
