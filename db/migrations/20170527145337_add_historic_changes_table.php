@@ -1,6 +1,8 @@
 <?php
 use Phinx\Migration\AbstractMigration;
 
+use Pragma\ORM\Model\Change;
+
 class AddHistoricChangesTable extends AbstractMigration
 {
 	/**
@@ -27,7 +29,7 @@ class AddHistoricChangesTable extends AbstractMigration
 	public function change(){
 		if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
 			$strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
-			$t = $this->table('historic_changes', ['id' => false, 'primary_key' => 'id']);
+			$t = $this->table(Change::getTableName(), ['id' => false, 'primary_key' => 'id']);
 			switch($strategy){
 				case 'mysql':
 					$t->addColumn('id', 'char', ['limit' => 36])
@@ -41,7 +43,7 @@ class AddHistoricChangesTable extends AbstractMigration
 			}
 		}
 		else{
-			$t = $this->table('historic_changes');
+			$t = $this->table(Change::getTableName());
 			$t->addColumn('action_id', 'integer');
 		}
 
