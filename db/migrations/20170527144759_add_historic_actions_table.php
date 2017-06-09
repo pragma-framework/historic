@@ -1,6 +1,6 @@
 <?php
 use Phinx\Migration\AbstractMigration;
-use Pragma\ORM\Model\Action;
+use Pragma\ORM\Action;
 
 class AddHistoricActionsTable extends AbstractMigration
 {
