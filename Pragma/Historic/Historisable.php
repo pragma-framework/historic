@@ -4,43 +4,54 @@ namespace Pragma\Historic;
 trait Historisable{
 	protected $is_historised = false; //tell if the object must be hisorized
 	protected $histo_excluded = null;//ignored columns during the historise process
-	protected $wasnew = false;
 	protected $global_name = "";//when it's a delete, it store the name of the object deleted
+	protected $was_new = true;
 	protected $histo_ref = null;
 
 	protected function historise($last = false){
-		//we juste save the updates, not the creations
-		if($this->is_historised() && ! $this->wasnew){
-			$changes = [];
-			foreach($this->fields as $k => $value){
-				if( ! isset($this->histo_excluded[$k]) &&
-						array_key_exists($k, $this->initial_values) &&
-						$value != $this->initial_values[$k]
-						){
-					$changes[$k] = [
-						'before' => $this->initial_values[$k],
-						'after' => $this->fields[$k]
-						];
-
-				}
-			}
-
-			if( !empty($changes) ){
+		if($this->is_historised()){
+			if($this->was_new){
+				//store only the actions, not all the details
 				$action = Action::build([
-					'historisable_type' => get_class($this),
-					'historisable_id' 	=> $this->id,
+					'historisable_type' 		=> get_class($this),
+					'historisable_id' 			=> $this->id,
 					'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
 					'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->id : null,
-					'type'							=> 'U',
+					'type'									=> 'C',
 					])->save();
+			}
+			else{
+				$changes = [];
+				foreach($this->fields as $k => $value){
+					if( ! isset($this->histo_excluded[$k]) &&
+							array_key_exists($k, $this->initial_values) &&
+							$value != $this->initial_values[$k]
+							){
+						$changes[$k] = [
+							'before' => $this->initial_values[$k],
+							'after' => $this->fields[$k]
+							];
 
-				foreach($changes as $k => $values){
-					Change::build([
-						'action_id'				=> $action->id,
-						'field'						=> $k,
-						'before'					=> $values['before'],
-						'after'						=> $values['after'],
+					}
+				}
+
+				if( !empty($changes) ){
+					$action = Action::build([
+						'historisable_type' => get_class($this),
+						'historisable_id' 	=> $this->id,
+						'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
+						'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->id : null,
+						'type'							=> 'U',
 						])->save();
+
+					foreach($changes as $k => $values){
+						Change::build([
+							'action_id'				=> $action->id,
+							'field'						=> $k,
+							'before'					=> $values['before'],
+							'after'						=> $values['after'],
+							])->save();
+					}
 				}
 			}
 			$this->init_histo_values($last);
@@ -51,6 +62,7 @@ trait Historisable{
 		$this->is_historised = $val;
 		if($val){
 			$this->pushHook('after_save', 'historise');
+			$this->pushHook('before_save', 'init_was_new');
 			$this->pushHook('before_delete', 'deleted_entry');
 			$this->pushHook('after_open', 'init_histo_values');
 		}
@@ -77,6 +89,10 @@ trait Historisable{
 			$this->initial_values = $this->fields;
 			$this->initialized = true;
 		}
+	}
+
+	protected function init_was_new(){
+		$this->was_new = $this->is_new();
 	}
 
 	/* ignored fields are passed as arguments */
