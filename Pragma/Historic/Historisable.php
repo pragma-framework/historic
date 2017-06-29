@@ -97,7 +97,11 @@ trait Historisable{
 
 	/* ignored fields are passed as arguments */
 	public function ignore_fields(){
-		$this->histo_excluded = array_flip(func_get_args());
+		if(empty($this->histo_excluded)){
+			$this->histo_excluded = array_flip(func_get_args());
+		}else{
+			$this->histo_excluded = array_merge($this->histo_excluded, array_flip(func_get_args()));
+		}
 	}
 
 	public function deleted_entry(){
