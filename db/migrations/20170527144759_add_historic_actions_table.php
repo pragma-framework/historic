@@ -53,7 +53,7 @@ class AddHistoricActionsTable extends AbstractMigration
 				$t->addColumn('historisable_type', 'char', ['limit' => 60])
 					->addColumn('historisable_id', 'integer')
 					->addColumn('historisable_ref_type', 'char', ['limit' => 60, 'null' => true])
-    			->addColumn('historisable_ref_id', 'integer');
+    			->addColumn('historisable_ref_id', 'integer', ['null' => true]);
 			}
 
 			$t->addColumn('type', 'char', ['limit' => 1, 'default' => 'U'])//U ou D
