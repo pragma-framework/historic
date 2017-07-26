@@ -9,6 +9,7 @@ trait Historisable{
 	protected $histo_ref = null;
 
 	protected function historise($last = false){
+		$action = null;
 		if($this->is_historised()){
 			if($this->was_new){
 				//store only the actions, not all the details
@@ -56,6 +57,7 @@ trait Historisable{
 			}
 			$this->init_histo_values($last);
 		}
+		return $action;
 	}
 
 	public function set_historised($val){
@@ -105,6 +107,7 @@ trait Historisable{
 	}
 
 	public function deleted_entry(){
+		$action = null;
 		if($this->is_historised()){
 			$action = Action::build([
 						'historisable_type' 		=> get_class($this),
@@ -116,6 +119,7 @@ trait Historisable{
 						])->save();
 
 		}
+		return $action;
 	}
 }
 
