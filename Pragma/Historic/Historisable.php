@@ -17,7 +17,7 @@ trait Historisable{
 					'historisable_type' 		=> get_class($this),
 					'historisable_id' 			=> $this->id,
 					'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
-					'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->id : null,
+					'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->histo_ref->id : null,
 					'type'									=> 'C',
 					])->save();
 			}
@@ -41,7 +41,7 @@ trait Historisable{
 						'historisable_type' => get_class($this),
 						'historisable_id' 	=> $this->id,
 						'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
-						'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->id : null,
+						'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->histo_ref->id : null,
 						'type'							=> 'U',
 						])->save();
 
