@@ -26,10 +26,11 @@ class AddHistoricActionsTable extends AbstractMigration
 		 */
 		public function change(){
 			if(defined('ORM_ID_AS_UID') && ORM_ID_AS_UID){
-				$strategy = defined('ORM_UID_STRATEGY') && ORM_UID_STRATEGY == 'mysql' ? 'mysql' : 'php';
+				$strategy = ! defined('ORM_UID_STRATEGY') ? 'php' : && ORM_UID_STRATEGY;
 				$t = $this->table('historic_actions', ['id' => false, 'primary_key' => 'id']);
 				switch($strategy){
 					case 'mysql':
+					case 'laravel-uuid':
 						$t->addColumn('id', 'char', ['limit' => 36])
 						  ->addColumn('historisable_type', 'char', ['limit' => 60])
 							->addColumn('historisable_id', 'char', ['limit' => 36])
