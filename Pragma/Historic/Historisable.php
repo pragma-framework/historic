@@ -16,10 +16,18 @@ trait Historisable{
 				$action = Action::build([
 					'historisable_type' 		=> get_class($this),
 					'historisable_id' 			=> $this->id,
-					'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
-					'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->histo_ref->id : null,
 					'type'									=> 'C',
-					])->save();
+				])->save();
+
+				if (!empty($this->histo_ref)) {
+					foreach ($this->histo_ref as $ref) {
+						Reference::build([
+							'action_id' => $action->id,
+							'ref_type'  => get_class($ref),
+							'ref_id'    => $ref->id,
+						])->save();;
+					}
+				}
 			}
 			else{
 				$changes = [];
@@ -40,10 +48,18 @@ trait Historisable{
 					$action = Action::build([
 						'historisable_type' => get_class($this),
 						'historisable_id' 	=> $this->id,
-						'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
-						'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->histo_ref->id : null,
 						'type'							=> 'U',
 						])->save();
+
+					if (!empty($this->histo_ref)) {
+						foreach ($this->histo_ref as $ref) {
+							Reference::build([
+								'action_id' => $action->id,
+								'ref_type'  => get_class($ref),
+								'ref_id'    => $ref->id,
+							])->save();
+						}
+					}
 
 					foreach($changes as $k => $values){
 						Change::build([
@@ -83,6 +99,10 @@ trait Historisable{
 	}
 
 	public function set_histo_ref($ref){
+		if (!is_array($ref)) {
+			$ref = [$ref];
+		}
+
 		$this->histo_ref = $ref;
 	}
 
@@ -112,12 +132,19 @@ trait Historisable{
 			$action = Action::build([
 						'historisable_type' 		=> get_class($this),
 						'historisable_id' 			=> $this->id,
-						'historisable_ref_type'	=> ! is_null($this->histo_ref) ? get_class($this->histo_ref) : null,
-						'historisable_ref_id'		=> ! is_null($this->histo_ref) ? $this->histo_ref->id : null,
 						'type'									=> 'D',
 						'deleted_name'					=> $this->get_global_name()
 						])->save();
 
+			if (!empty($this->histo_ref)) {
+				foreach ($this->histo_ref as $ref) {
+					Reference::build([
+						'action_id' => $action->id,
+						'ref_type'  => get_class($ref),
+						'ref_id'    => $ref->id,
+					])->save();
+				}
+			}
 		}
 		return $action;
 	}
