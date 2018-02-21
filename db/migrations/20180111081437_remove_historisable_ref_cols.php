@@ -27,7 +27,7 @@ class RemoveHistorisableRefCols extends AbstractMigration
      */
     public function up()
     {
-		$this->table((defined('DB_PREFIX') ? DB_PREFIX : 'pragma_').'historic_actions')
+		$this->table('historic_actions')
 			->removeColumn('historisable_ref_type')
 			->removeColumn('historisable_ref_id')
 			->save();
@@ -35,7 +35,7 @@ class RemoveHistorisableRefCols extends AbstractMigration
 
     public function down()
     {
-		$t = $this->table((defined('DB_PREFIX') ? DB_PREFIX : 'pragma_').'historic_actions');
+		$t = $this->table('historic_actions');
 
 		if (defined('ORM_ID_AS_UID') && ORM_ID_AS_UID) {
 			$strategy = ! defined('ORM_UID_STRATEGY') ? 'php' : ORM_UID_STRATEGY;
