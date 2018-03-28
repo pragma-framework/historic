@@ -1,10 +1,13 @@
 <?php
 namespace Pragma\Historic;
 
+use Pragma\DB\DB;
+
 trait Historisable{
 	protected $is_historised = false; //tell if the object must be hisorized
 	protected $histo_excluded = null;//ignored columns during the historise process
 	protected $global_name = "";//when it's a delete, it store the name of the object deleted
+	protected $stop_delete_propagation = false;//when the object is deleted, if true, pragma won't propagate the delete_name on old actions
 	protected $was_new = true;
 	protected $histo_ref = null;
 
@@ -126,6 +129,10 @@ trait Historisable{
 		}
 	}
 
+	public function stop_delete_propagation($val = true) {
+		$this->stop_delete_propagation = $val;
+	}
+
 	public function deleted_entry(){
 		$action = null;
 		if($this->is_historised()){
@@ -145,6 +152,14 @@ trait Historisable{
 					])->save();
 				}
 			}
+		}
+
+		if (! $this->stop_delete_propagation) {
+			DB::getDB()->query("UPDATE ".Action::getTableName()."
+													SET deleted_name = ?
+													WHERE historisable_type = ?
+													AND historisable_id = ?
+													AND type != 'D'", [$this->get_global_name(), get_class($this), $this->id]);
 		}
 		return $action;
 	}
