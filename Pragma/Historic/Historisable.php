@@ -11,12 +11,14 @@ trait Historisable{
 	protected $was_new = true;
 	protected $histo_ref = null;
 
+	protected $action_classname = "Pragma\\Historic\\Action";
+
 	protected function historise($last = false){
 		$action = null;
 		if($this->is_historised()){
 			if($this->was_new){
 				//store only the actions, not all the details
-				$action = Action::build([
+				$action = $this->action_classname::build([
 					'historisable_type' 		=> get_class($this),
 					'historisable_id' 			=> $this->id,
 					'type'									=> 'C',
@@ -48,7 +50,7 @@ trait Historisable{
 				}
 
 				if( !empty($changes) ){
-					$action = Action::build([
+					$action = $this->action_classname::build([
 						'historisable_type' => get_class($this),
 						'historisable_id' 	=> $this->id,
 						'type'							=> 'U',
@@ -77,6 +79,10 @@ trait Historisable{
 			$this->init_histo_values($last);
 		}
 		return $action;
+	}
+
+	public function setActionClassname($classname) {
+		$this->action_classname = $classname;
 	}
 
 	public function set_historised($val){
@@ -136,7 +142,7 @@ trait Historisable{
 	public function deleted_entry(){
 		$action = null;
 		if($this->is_historised()){
-			$action = Action::build([
+			$action = $this->action_classname::build([
 						'historisable_type' 		=> get_class($this),
 						'historisable_id' 			=> $this->id,
 						'type'									=> 'D',
@@ -155,7 +161,7 @@ trait Historisable{
 		}
 
 		if (! $this->stop_delete_propagation) {
-			DB::getDB()->query("UPDATE ".Action::getTableName()."
+			DB::getDB()->query("UPDATE ".$this->action_classname::getTableName()."
 													SET deleted_name = ?
 													WHERE historisable_type = ?
 													AND historisable_id = ?
