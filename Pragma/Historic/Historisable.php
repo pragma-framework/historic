@@ -30,7 +30,7 @@ trait Historisable{
 							'action_id' => $action->id,
 							'ref_type'  => get_class($ref),
 							'ref_id'    => $ref->id,
-						])->save();;
+						])->save();
 					}
 				}
 			}
