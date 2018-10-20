@@ -17,68 +17,86 @@ trait Historisable{
 		$action = null;
 		if($this->is_historised()){
 			if($this->was_new){
-				//store only the actions, not all the details
-				$action = $this->action_classname::build([
-					'historisable_type' 		=> get_class($this),
-					'historisable_id' 			=> $this->id,
-					'type'									=> 'C',
-				])->save();
-
-				if (!empty($this->histo_ref)) {
-					foreach ($this->histo_ref as $ref) {
-						Reference::build([
-							'action_id' => $action->id,
-							'ref_type'  => get_class($ref),
-							'ref_id'    => $ref->id,
-						])->save();
-					}
-				}
+				$action = $this->historiseNew();
 			}
 			else{
-				$changes = [];
-				foreach($this->fields as $k => $value){
-					if( ! isset($this->histo_excluded[$k]) &&
-							array_key_exists($k, $this->initial_values) &&
-							$value != $this->initial_values[$k]
-							){
-						$changes[$k] = [
-							'before' => $this->initial_values[$k],
-							'after' => $this->fields[$k]
-							];
-
-					}
-				}
-
-				if( !empty($changes) ){
-					$action = $this->action_classname::build([
-						'historisable_type' => get_class($this),
-						'historisable_id' 	=> $this->id,
-						'type'							=> 'U',
-						])->save();
-
-					if (!empty($this->histo_ref)) {
-						foreach ($this->histo_ref as $ref) {
-							Reference::build([
-								'action_id' => $action->id,
-								'ref_type'  => get_class($ref),
-								'ref_id'    => $ref->id,
-							])->save();
-						}
-					}
-
-					foreach($changes as $k => $values){
-						Change::build([
-							'action_id'				=> $action->id,
-							'field'						=> $k,
-							'before'					=> $values['before'],
-							'after'						=> $values['after'],
-							])->save();
-					}
-				}
+				$action = $this->historiseUpdate();
 			}
 			$this->init_histo_values($last);
 		}
 		return $action;
+	}
+
+	protected function historiseNew(){
+		//store only the actions, not all the details
+		$action = $this->buildAction('C');
+
+		$this->buildHistoRef($action);
+
+		return $action;
+	}
+
+	protected function historiseUpdate(){
+		$action = null;
+		
+		$changes = $this->getHistoriseChanges();
+
+		if( !empty($changes) ){
+			$action = $this->buildAction('U');
+
+			$this->buildHistoRef($action);
+
+			foreach($changes as $k => $values){
+				Change::build([
+					'action_id'				=> $action->id,
+					'field'					=> $k,
+					'before'				=> $values['before'],
+					'after'					=> $values['after'],
+					])->save();
+			}
+		}
+		return $action;
+	}
+
+	protected function buildAction($type){
+		$params = [
+			'historisable_type' => get_class($this),
+			'historisable_id' 	=> $this->id,
+			'type'				=> $type,
+		];
+		if(strtoupper($type) == 'D'){
+			$params['deleted_name'] = $this->get_global_name();
+		}
+		return $this->action_classname::build($params)->save();
+	}
+
+	protected function buildHistoRef(Action $action){
+		if (!empty($this->histo_ref)) {
+			foreach ($this->histo_ref as $ref) {
+				Reference::build([
+					'action_id' => $action->id,
+					'ref_type'  => get_class($ref),
+					'ref_id'    => $ref->id,
+				])->save();
+			}
+		}
+	}
+
+	protected function getHistoriseChanges(){
+		$changes = [];
+		foreach($this->fields as $k => $value){
+			if( ! isset($this->histo_excluded[$k]) &&
+					array_key_exists($k, $this->initial_values) &&
+					$value != $this->initial_values[$k]
+					){
+				$changes[$k] = [
+					'before' => $this->initial_values[$k],
+					'after' => $this->fields[$k]
+					];
+
+			}
+		}
+		return $changes;
 	}
 
 	public function setActionClassname($classname) {
@@ -142,30 +160,17 @@ trait Historisable{
 	public function deleted_entry(){
 		$action = null;
 		if($this->is_historised()){
-			$action = $this->action_classname::build([
-						'historisable_type' 		=> get_class($this),
-						'historisable_id' 			=> $this->id,
-						'type'									=> 'D',
-						'deleted_name'					=> $this->get_global_name()
-						])->save();
+			$action = $this->buildAction('D');
 
-			if (!empty($this->histo_ref)) {
-				foreach ($this->histo_ref as $ref) {
-					Reference::build([
-						'action_id' => $action->id,
-						'ref_type'  => get_class($ref),
-						'ref_id'    => $ref->id,
-					])->save();
-				}
-			}
+			$this->buildHistoRef($action);
 		}
 
 		if (! $this->stop_delete_propagation) {
-			DB::getDB()->query("UPDATE ".$this->action_classname::getTableName()."
-													SET deleted_name = ?
-													WHERE historisable_type = ?
-													AND historisable_id = ?
-													AND type != 'D'", [$this->get_global_name(), get_class($this), $this->id]);
+			DB::getDB()->query("UPDATE 	".$this->action_classname::getTableName()."
+								SET 	deleted_name = ?
+								WHERE 	historisable_type = ?
+								AND 	historisable_id = ?
+								AND 	type != 'D'", [$this->get_global_name(), get_class($this), $this->id]);
 		}
 		return $action;
 	}
