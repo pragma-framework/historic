@@ -35,19 +35,7 @@ trait Historisable{
 				}
 			}
 			else{
-				$changes = [];
-				foreach($this->fields as $k => $value){
-					if( ! isset($this->histo_excluded[$k]) &&
-							array_key_exists($k, $this->initial_values) &&
-							$value != $this->initial_values[$k]
-							){
-						$changes[$k] = [
-							'before' => $this->initial_values[$k],
-							'after' => $this->fields[$k]
-							];
-
-					}
-				}
+				$changes = $this->changes();
 
 				if( !empty($changes) ){
 					$action = $this->action_classname::build([
@@ -76,7 +64,6 @@ trait Historisable{
 					}
 				}
 			}
-			$this->init_histo_values($last);
 		}
 		return $action;
 	}
@@ -92,7 +79,12 @@ trait Historisable{
 			$this->pushHook('before_save', 'init_was_new');
 			$this->pushHook('before_delete', 'deleted_entry');
 			$this->pushHook('after_open', 'init_histo_values');
+			$this->pushHook('after_build', 'init_histo_values');
 		}
+	}
+
+	protected function init_histo_values() {
+		$this->enableChangesDetection(true);
 	}
 
 	public function is_historised(){
@@ -115,14 +107,7 @@ trait Historisable{
 		$this->histo_ref = $ref;
 	}
 
-	protected function init_histo_values($force = false){
-		if(! $this->initialized || $force){
-			$this->initial_values = $this->fields;
-			$this->initialized = true;
-		}
-	}
-
-	protected function init_was_new(){
+	protected function init_was_new() {
 		$this->was_new = $this->is_new();
 	}
 
