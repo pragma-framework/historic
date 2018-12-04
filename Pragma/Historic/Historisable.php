@@ -22,7 +22,6 @@ trait Historisable{
 			else{
 				$action = $this->historiseUpdate();
 			}
-			$this->init_histo_values($last);
 		}
 		return $action;
 	}
@@ -39,7 +38,7 @@ trait Historisable{
 	protected function historiseUpdate(){
 		$action = null;
 		
-		$changes = $this->getHistoriseChanges();
+		$changes = $this->changes();
 
 		if( !empty($changes) ){
 			$action = $this->buildAction('U');
@@ -82,23 +81,6 @@ trait Historisable{
 		}
 	}
 
-	protected function getHistoriseChanges(){
-		$changes = [];
-		foreach($this->fields as $k => $value){
-			if( ! isset($this->histo_excluded[$k]) &&
-					array_key_exists($k, $this->initial_values) &&
-					$value != $this->initial_values[$k]
-					){
-				$changes[$k] = [
-					'before' => $this->initial_values[$k],
-					'after' => $this->fields[$k]
-					];
-
-			}
-		}
-		return $changes;
-	}
-
 	public function setActionClassname($classname) {
 		$this->action_classname = $classname;
 	}
@@ -110,7 +92,12 @@ trait Historisable{
 			$this->pushHook('before_save', 'init_was_new');
 			$this->pushHook('before_delete', 'deleted_entry');
 			$this->pushHook('after_open', 'init_histo_values');
+			$this->pushHook('after_build', 'init_histo_values');
 		}
+	}
+
+	protected function init_histo_values() {
+		$this->enableChangesDetection(true);
 	}
 
 	public function is_historised(){
@@ -133,23 +120,16 @@ trait Historisable{
 		$this->histo_ref = $ref;
 	}
 
-	protected function init_histo_values($force = false){
-		if(! $this->initialized || $force){
-			$this->initial_values = $this->fields;
-			$this->initialized = true;
-		}
-	}
-
-	protected function init_was_new(){
+	protected function init_was_new() {
 		$this->was_new = $this->is_new();
 	}
 
 	/* ignored fields are passed as arguments */
-	public function ignore_fields(){
+	public function ignore_fields(...$fields){
 		if(empty($this->histo_excluded)){
-			$this->histo_excluded = array_flip(func_get_args());
+			$this->histo_excluded = array_flip($fields);
 		}else{
-			$this->histo_excluded = array_merge($this->histo_excluded, array_flip(func_get_args()));
+			$this->histo_excluded = array_merge($this->histo_excluded, array_flip($fields));
 		}
 	}
 
