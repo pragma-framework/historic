@@ -10,6 +10,8 @@ trait Historisable{
 	protected $stop_delete_propagation = false;//when the object is deleted, if true, pragma won't propagate the delete_name on old actions
 	protected $was_new = true;
 	protected $histo_ref = null;
+	protected $initial_global_name = '';
+	protected $global_name_fields = [];
 
 	protected $action_classname = "Pragma\\Historic\\Action";
 
@@ -62,6 +64,7 @@ trait Historisable{
 			'historisable_type' => get_class($this),
 			'historisable_id' 	=> $this->id,
 			'type'				=> $type,
+			'global_name' 		=> $this->get_initial_global_name(),
 		];
 		if(strtoupper($type) == 'D'){
 			$params['deleted_name'] = $this->get_global_name();
@@ -92,6 +95,7 @@ trait Historisable{
 			$this->pushHook('before_save', 'init_was_new');
 			$this->pushHook('before_delete', 'deleted_entry');
 			$this->pushHook('after_open', 'init_histo_values');
+			$this->pushHook('after_open', 'init_initial_global_name');
 			$this->pushHook('after_build', 'init_histo_values');
 		}
 	}
@@ -104,11 +108,23 @@ trait Historisable{
 		return $this->is_historised;
 	}
 
+	/*
+	DEPRECATED: use self::set_global_name_fields() in __construct()
+	 */
 	public function set_global_name($name){
 		$this->global_name = $name;
 	}
 
 	public function get_global_name(){
+		if(empty($this->global_name) && !empty($this->global_name_fields)){
+			$this->global_name = [];
+			foreach($this->global_name_fields as $f){
+				if(array_key_exists($f, $this->fields) && !empty($this->$f)){
+					$this->global_name[] = $this->$f;
+				}
+			}
+			$this->global_name = implode(' ', $this->global_name);
+		}
 		return $this->global_name;
 	}
 
@@ -122,6 +138,21 @@ trait Historisable{
 
 	protected function init_was_new() {
 		$this->was_new = $this->is_new();
+	}
+
+	protected function set_global_name_fields($fields = []){
+		if(!is_array($fields)) {
+			$fields = [$fields];
+		}
+		$this->global_name_fields = $fields;
+		return $this;
+	}
+
+	protected function init_initial_global_name() {
+		$this->initial_global_name = $this->get_global_name();
+	}
+	public function get_initial_global_name(){
+		return empty($this->initial_global_name) ? $this->get_global_name() : $this->initial_global_name;
 	}
 
 	/* ignored fields are passed as arguments */
