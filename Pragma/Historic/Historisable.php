@@ -35,7 +35,7 @@ trait Historisable{
 				}
 			}
 			else{
-				$changes = $this->changes();
+				$changes = $this->changes($this->histo_excluded);
 
 				if( !empty($changes) ){
 					$action = $this->action_classname::build([
