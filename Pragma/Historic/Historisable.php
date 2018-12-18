@@ -80,7 +80,7 @@ trait Historisable{
                     'ref_type'  => get_class($ref),
                     'ref_id'    => $ref->id,
                 ]);
-                if (method_exists($obj, 'get_initial_global_name')){
+                if (method_exists($ref, 'get_initial_global_name')){
                     $obj->ref_global_name = $ref->get_initial_global_name();
                 }
                 $obj->save();
