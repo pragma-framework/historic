@@ -75,12 +75,15 @@ trait Historisable{
 	protected function buildHistoRef(Action $action){
 		if (!empty($this->histo_ref)) {
 			foreach ($this->histo_ref as $ref) {
-				Reference::build([
-					'action_id'         => $action->id,
-					'ref_type'          => get_class($ref),
-					'ref_id'            => $ref->id,
-                    'ref_global_name'   => $this->get_initial_global_name(),
-                ])->save();
+                $obj = Reference::build([
+                    'action_id' => $action->id,
+                    'ref_type'  => get_class($ref),
+                    'ref_id'    => $ref->id,
+                ]);
+                if (method_exists($obj, 'get_initial_global_name')){
+                    $obj->ref_global_name = $ref->get_initial_global_name();
+                }
+                $obj->save();
 			}
 		}
 	}
