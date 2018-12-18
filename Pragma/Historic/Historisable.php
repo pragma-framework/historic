@@ -76,10 +76,11 @@ trait Historisable{
 		if (!empty($this->histo_ref)) {
 			foreach ($this->histo_ref as $ref) {
 				Reference::build([
-					'action_id' => $action->id,
-					'ref_type'  => get_class($ref),
-					'ref_id'    => $ref->id,
-				])->save();
+					'action_id'         => $action->id,
+					'ref_type'          => get_class($ref),
+					'ref_id'            => $ref->id,
+                    'ref_global_name'   => $this->get_initial_global_name(),
+                ])->save();
 			}
 		}
 	}
