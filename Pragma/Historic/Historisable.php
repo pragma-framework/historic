@@ -61,25 +61,25 @@ trait Historisable{
 
 	protected function buildAction($type){
 		$params = [
-			'historisable_type' => get_class($this),
-			'historisable_id' 	=> $this->id,
-			'type'				=> $type,
-			'global_name' 		=> $this->get_initial_global_name(),
+		    'historisable_type' => get_class($this),
+            'historisable_id'   => $this->id,
+            'type'              => $type,
+            'global_name'       => $this->get_initial_global_name(),
 		];
 		if(strtoupper($type) == 'D'){
-			$params['deleted_name'] = $this->get_global_name();
+		    $params['deleted_name'] = $this->get_global_name();
 		}
 		return $this->action_classname::build($params)->save();
 	}
 
 	protected function buildHistoRef(Action $action){
-		if (!empty($this->histo_ref)) {
+	    if (!empty($this->histo_ref)) {
 			foreach ($this->histo_ref as $ref) {
                 $obj = Reference::build([
                     'action_id' => $action->id,
                     'ref_type'  => get_class($ref),
                     'ref_id'    => $ref->id,
-                ]);
+                    ]);
                 if (method_exists($ref, 'get_initial_global_name')){
                     $obj->ref_global_name = $ref->get_initial_global_name();
                 }
