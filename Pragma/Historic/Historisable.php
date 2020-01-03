@@ -95,12 +95,12 @@ trait Historisable{
 	public function set_historised($val){
 		$this->is_historised = $val;
 		if($val){
-			$this->pushHook('after_save', 'historise');
-			$this->pushHook('before_save', 'init_was_new');
-			$this->pushHook('before_delete', 'deleted_entry');
-			$this->pushHook('after_open', 'init_histo_values');
-			$this->pushHook('after_open', 'init_initial_global_name');
-			$this->pushHook('after_build', 'init_histo_values');
+			$this->pushHook('after_save', 'historise', 'pragma:historic:historise');
+			$this->pushHook('before_save', 'init_was_new', 'pragma:historic:init_was_new');
+			$this->pushHook('before_delete', 'deleted_entry', 'pragma:historic:deleted_entry');
+			$this->pushHook('after_open', 'init_histo_values', 'pragma:historic:init_histo_values');
+			$this->pushHook('after_open', 'init_initial_global_name', 'pragma:historic:init_initial_global_name');
+			$this->pushHook('after_build', 'init_histo_values', 'pragma:historic:init_histo_values_build');
 		}
 	}
 
