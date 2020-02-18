@@ -14,6 +14,7 @@ trait Historisable{
 	protected $global_name_fields = [];
 
 	protected $action_classname = "Pragma\\Historic\\Action";
+	protected $reference_classname = "Pragma\\Historic\\Reference";
 
 	protected function historise($last = false){
 		$action = null;
@@ -75,7 +76,7 @@ trait Historisable{
     protected function buildHistoRef(Action $action) {
         if (!empty($this->histo_ref)) {
             foreach ($this->histo_ref as $ref) {
-                $obj = Reference::build([
+                $obj = $this->reference_classname::build([
                     'action_id' => $action->id,
                     'ref_type'  => get_class($ref),
                     'ref_id'    => $ref->id,
@@ -90,6 +91,10 @@ trait Historisable{
 
 	public function setActionClassname($classname) {
 		$this->action_classname = $classname;
+	}
+
+	public function setReferenceClassname($classname) {
+		$this->reference_classname = $classname;
 	}
 
 	public function set_historised($val){
