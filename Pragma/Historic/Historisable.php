@@ -8,6 +8,7 @@ trait Historisable{
 	protected $histo_excluded = null;//ignored columns during the historise process
 	protected $global_name = "";//when it's a delete, it store the name of the object deleted
 	protected $stop_delete_propagation = false;//when the object is deleted, if true, pragma won't propagate the delete_name on old actions
+	protected $should_store_creation_values = false;//tell if pragma should store values with the "create" action
 	protected $was_new = true;
 	protected $histo_ref = null;
 	protected $initial_global_name = '';
@@ -35,6 +36,19 @@ trait Historisable{
 
 		$this->buildHistoRef($action);
 
+		if($this->should_store_creation_values) {
+			foreach($this->fields as $k => $v) {
+				if( ! isset($this->histo_excluded[$k]) && array_key_exists($k, $this->describe()) ) {
+					Change::build([
+					'action_id'			=> $action->id,
+					'field'					=> $k,
+					'before'				=> null,
+					'after'					=> $v,
+					])->save();
+				}
+			}
+		}
+
 		return $action;
 	}
 
@@ -60,34 +74,34 @@ trait Historisable{
 		return $action;
 	}
 
-    protected function buildAction($type) {
-        $params = [
-            'historisable_type' => get_class($this),
-            'historisable_id'   => $this->id,
-            'type'              => $type,
-            'global_name'       => $this->get_initial_global_name(),
-        ];
-        if(strtoupper($type) == 'D'){
-            $params['deleted_name'] = $this->get_global_name();
-        }
-        return $this->action_classname::build($params)->save();
-    }
+  protected function buildAction($type) {
+      $params = [
+          'historisable_type' => get_class($this),
+          'historisable_id'   => $this->id,
+          'type'              => $type,
+          'global_name'       => $this->get_initial_global_name(),
+      ];
+      if(strtoupper($type) == 'D'){
+          $params['deleted_name'] = $this->get_global_name();
+      }
+      return $this->action_classname::build($params)->save();
+  }
 
-    protected function buildHistoRef(Action $action) {
-        if (!empty($this->histo_ref)) {
-            foreach ($this->histo_ref as $ref) {
-                $obj = $this->reference_classname::build([
-                    'action_id' => $action->id,
-                    'ref_type'  => get_class($ref),
-                    'ref_id'    => $ref->id,
-                ]);
-                if (method_exists($ref, 'get_initial_global_name')){
-                    $obj->ref_global_name = $ref->get_initial_global_name();
-                }
-                $obj->save();
-            }
-        }
-    }
+  protected function buildHistoRef(Action $action) {
+      if (!empty($this->histo_ref)) {
+          foreach ($this->histo_ref as $ref) {
+              $obj = $this->reference_classname::build([
+                  'action_id' => $action->id,
+                  'ref_type'  => get_class($ref),
+                  'ref_id'    => $ref->id,
+              ]);
+              if (method_exists($ref, 'get_initial_global_name')){
+                  $obj->ref_global_name = $ref->get_initial_global_name();
+              }
+              $obj->save();
+          }
+      }
+  }
 
 	public function setActionClassname($classname) {
 		$this->action_classname = $classname;
@@ -193,6 +207,10 @@ trait Historisable{
 								AND 	type != 'D'", [$this->get_global_name(), get_class($this), $this->id]);
 		}
 		return $action;
+	}
+
+	public function historize_creation_values($val = true) {
+		$this->should_store_creation_values = $val;
 	}
 }
 
