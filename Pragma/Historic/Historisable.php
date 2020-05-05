@@ -17,6 +17,8 @@ trait Historisable{
 	protected $action_classname = "Pragma\\Historic\\Action";
 	protected $reference_classname = "Pragma\\Historic\\Reference";
 
+	protected $overriden_classname = null;
+
 	protected function historise($last = false){
 		$action = null;
 		if($this->is_historised()){
@@ -56,7 +58,6 @@ trait Historisable{
 		$action = null;
 
 		$changes = $this->changes($this->histo_excluded);
-
 		if( !empty($changes) ){
 			$action = $this->buildAction('U');
 
@@ -76,7 +77,7 @@ trait Historisable{
 
   protected function buildAction($type) {
       $params = [
-          'historisable_type' => get_class($this),
+          'historisable_type' => self::get_classname($this),
           'historisable_id'   => $this->id,
           'type'              => $type,
           'global_name'       => $this->get_initial_global_name(),
@@ -92,7 +93,7 @@ trait Historisable{
           foreach ($this->histo_ref as $ref) {
               $obj = $this->reference_classname::build([
                   'action_id' => $action->id,
-                  'ref_type'  => get_class($ref),
+                  'ref_type'  => self::get_classname($ref),
                   'ref_id'    => $ref->id,
               ]);
               if (method_exists($ref, 'get_initial_global_name')){
@@ -204,13 +205,21 @@ trait Historisable{
 								SET 	deleted_name = ?
 								WHERE 	historisable_type = ?
 								AND 	historisable_id = ?
-								AND 	type != 'D'", [$this->get_global_name(), get_class($this), $this->id]);
+								AND 	type != 'D'", [$this->get_global_name(), self::get_classname($this), $this->id]);
 		}
 		return $action;
 	}
 
 	public function historize_creation_values($val = true) {
 		$this->should_store_creation_values = $val;
+	}
+
+	public function override_class_name($val) {
+		$this->overriden_classname = $val;
+	}
+
+	private static function get_classname($object) {
+		return (method_exists($object, "override_class_name") && $object->overriden_classname) ? $object->overriden_classname : get_class($object);
 	}
 }
 
