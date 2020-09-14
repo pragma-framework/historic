@@ -50,7 +50,7 @@ trait Historisable{
 				}
 			}
 
-			Change::save_stored_objects(['id','id_lang']);
+			Change::save_stored_objects();
 		}
 
 		return $action;
