@@ -41,14 +41,16 @@ trait Historisable{
 		if($this->should_store_creation_values) {
 			foreach($this->fields as $k => $v) {
 				if( ! isset($this->histo_excluded[$k]) && array_key_exists($k, $this->describe()) ) {
-					Change::build([
-					'action_id'			=> $action->id,
-					'field'					=> $k,
-					'before'				=> null,
-					'after'					=> $v,
-					])->save();
+					Change::store_object(Change::build([
+						'action_id'				=> $action->id,
+						'field'					=> $k,
+						'before'				=> null,
+						'after'					=> $v,
+					]));
 				}
 			}
+
+			Change::save_stored_objects();
 		}
 
 		return $action;
