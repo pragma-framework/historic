@@ -81,6 +81,7 @@ trait Historisable{
           'historisable_id'   => $this->id,
           'type'              => $type,
           'global_name'       => $this->get_initial_global_name(),
+          'created_at'				=> (new \DateTime())->format('Y-m-d H:i:s.u')
       ];
       if(strtoupper($type) == 'D'){
           $params['deleted_name'] = $this->get_global_name();
