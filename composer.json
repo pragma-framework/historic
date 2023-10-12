@@ -8,7 +8,7 @@
     ],
     "require": {
         "php": ">=7.0.0",
-        "robmorgan/phinx": "^0.11.1",
+        "robmorgan/phinx": ">=0.11.1",
         "pragma-framework/core": ">=1.0.0"
     },
      "autoload": {
