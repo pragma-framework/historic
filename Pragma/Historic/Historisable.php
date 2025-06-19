@@ -20,6 +20,8 @@ trait Historisable
 
     protected $overriden_classname = null;
 
+    protected $last_action = null;
+
     protected function historise($last = false)
     {
         $action = null;
@@ -30,7 +32,12 @@ trait Historisable
                 $action = $this->historiseUpdate();
             }
         }
+        $this->last_action = $action;
         return $action;
+    }
+
+    public function getLastAction() {
+        return $this->last_action;
     }
 
     protected function historiseNew()
@@ -237,6 +244,8 @@ trait Historisable
 								AND 	historisable_id = ?
 								AND 	type != 'D'", [$this->get_global_name(), self::get_classname($this), $this->id]);
         }
+
+        $this->last_action = $action;
         return $action;
     }
 
